@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Progress Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex justify-center items-center min-h-screen">
+    <div class="bg-white p-6 rounded-lg shadow-lg w-96">
+        <h2 class="text-2xl font-bold mb-4 text-center">Task Progress Tracker</h2>
+        <div class="flex mb-4">
+            <input id="taskInput" type="text" placeholder="Enter task" class="flex-1 p-2 border rounded-l-lg">
+            <button onclick="addTask()" class="bg-blue-500 text-white px-4 rounded-r-lg">Add</button>
+        </div>
+        <div class="relative w-full bg-gray-300 h-4 rounded-lg overflow-hidden">
+            <div id="progressBar" class="bg-green-500 h-4 w-0"></div>
+        </div>
+        <ul id="taskList" class="mt-4 space-y-2"></ul>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", loadTasks);
+
+        function addTask() {
+            let taskInput = document.getElementById("taskInput");
+            let taskText = taskInput.value.trim();
+            if (taskText === "") return;
+
+            let taskList = document.getElementById("taskList");
+            let li = document.createElement("li");
+            li.className = "flex justify-between items-center p-2 bg-gray-200 rounded-lg";
+            li.innerHTML = `
+                <span class="flex-1 cursor-pointer" onclick="toggleComplete(this)">${taskText}</span>
+                <button onclick="removeTask(this)" class="text-red-500">&times;</button>
+            `;
+            taskList.appendChild(li);
+            saveTasks();
+            updateProgress();
+            taskInput.value = "";
+        }
+
+        function removeTask(button) {
+            button.parentElement.remove();
+            saveTasks();
+            updateProgress();
+        }
+
+        function toggleComplete(span) {
+            span.classList.toggle("line-through");
+            saveTasks();
+            updateProgress();
+        }
+
+        function updateProgress() {
+            let tasks = document.querySelectorAll("#taskList li");
+            let completedTasks = document.querySelectorAll("#taskList li span.line-through");
+            let progress = tasks.length === 0 ? 0 : (completedTasks.length / tasks.length) * 100;
+            document.getElementById("progressBar").style.width = progress + "%";
+        }
+
+        function saveTasks() {
+            let tasks = [];
+            document.querySelectorAll("#taskList li").forEach(li => {
+                tasks.push({ text: li.children[0].innerText, completed: li.children[0].classList.contains("line-through") });
+            });
+            localStorage.setItem("tasks", JSON.stringify(tasks));
+        }
+
+        function loadTasks() {
+            let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+            let taskList = document.getElementById("taskList");
+            tasks.forEach(task => {
+                let li = document.createElement("li");
+                li.className = "flex justify-between items-center p-2 bg-gray-200 rounded-lg";
+                li.innerHTML = `
+                    <span class="flex-1 cursor-pointer ${task.completed ? 'line-through' : ''}" onclick="toggleComplete(this)">${task.text}</span>
+                    <button onclick="removeTask(this)" class="text-red-500">&times;</button>
+                `;
+                taskList.appendChild(li);
+            });
+            updateProgress();
+        }
+    </script>
+</body>
+</html>
